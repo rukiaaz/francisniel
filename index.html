@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Francis Niel Tamayo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#080808;--fg:#e8e8e4;--dim:#4a4a4a;--border:#1e1e1e;--font:'Space Mono',monospace;--ease:cubic-bezier(.16,1,.3,1);--back:cubic-bezier(.34,1.56,.64,1)}
+html,body,#root{width:100%;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);overflow-x:hidden;cursor:none;transition:background .7s,color .7s}
+
+#prog{position:fixed;top:0;left:0;height:2px;width:0%;background:var(--fg);z-index:9999;transition:width .1s linear;mix-blend-mode:difference}
+#theme-flash{position:fixed;inset:0;z-index:5000;pointer-events:none;opacity:0;background:var(--fg);transition:opacity .15s ease}
+#theme-flash.flash{opacity:.08}
+
+#splash{position:fixed;inset:0;background:var(--bg);z-index:8000;display:flex;align-items:center;justify-content:center;transition:opacity .8s var(--ease),transform .8s var(--ease)}
+#splash.hide{opacity:0;transform:translateY(-8px);pointer-events:none}
+.splash-name{font-size:clamp(28px,5vw,56px);font-weight:700;letter-spacing:-.03em;overflow:hidden}
+.splash-name span{display:block;animation:su 1s var(--ease) .3s both}
+.splash-bar{width:0;height:1px;background:var(--fg);margin-top:20px;animation:grow 1.6s var(--ease) .5s forwards}
+@keyframes grow{from{width:0}to{width:100%}}
+
+.cur{position:fixed;width:7px;height:7px;background:var(--fg);border-radius:50%;pointer-events:none;z-index:7000;transform:translate(-50%,-50%);transition:width .25s,height .25s;mix-blend-mode:difference}
+.cur.h{width:14px;height:14px}
+.cur.click{width:20px;height:20px;opacity:.5}
+.cur-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(232,232,228,.45);border-radius:50%;pointer-events:none;z-index:6999;transform:translate(-50%,-50%);transition:width .4s var(--back),height .4s var(--back)}
+.cur-ring.h{width:58px;height:58px;opacity:.3}
+.ripple-el{position:fixed;border-radius:50%;background:rgba(232,232,228,.1);pointer-events:none;z-index:6998;transform:translate(-50%,-50%) scale(0);animation:ripple .65s var(--ease) forwards}
+@keyframes ripple{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+
+#fog{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+
+.wrap{position:relative;z-index:1}
+header{position:fixed;top:0;left:0;width:100%;padding:26px 44px;display:flex;justify-content:space-between;align-items:center;z-index:500}
+.logo{font-size:12px;letter-spacing:.06em;text-decoration:none;color:var(--fg);font-weight:700;position:relative;mix-blend-mode:difference}
+.logo::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1px;background:var(--fg);transition:width .5s var(--ease)}
+.logo:hover::after{width:100%}
+
+.themes{display:flex;gap:14px;font-size:10px;letter-spacing:.1em;color:var(--dim);mix-blend-mode:difference}
+.themes button{background:none;border:none;color:inherit;font-family:var(--font);cursor:none;transition:color .3s;padding:0;font-size:10px}
+.themes button:hover,.themes button.on{color:var(--fg)}
+
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:none;padding:4px;mix-blend-mode:difference;background:none;border:none}
+.hamburger span{display:block;width:22px;height:1px;background:var(--fg);transition:transform .4s var(--ease),opacity .3s}
+.hamburger.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.mob-menu{position:fixed;inset:0;background:var(--bg);z-index:400;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:36px;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+.mob-menu.open{opacity:1;pointer-events:all}
+.mob-menu a{font-size:28px;font-weight:700;letter-spacing:-.02em;text-decoration:none;color:var(--dim);transition:color .3s}
+.mob-menu a:hover{color:var(--fg)}
+
+nav.side{position:fixed;left:40px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:20px}
+nav.side a{text-decoration:none;color:var(--dim);font-size:10px;letter-spacing:.14em;display:flex;align-items:center;gap:10px;transition:color .3s;cursor:none;white-space:nowrap}
+.dot{width:4px;height:4px;border-radius:50%;background:var(--dim);flex-shrink:0;transition:background .3s,transform .45s var(--back),box-shadow .3s}
+nav.side a:hover{color:var(--fg)}
+nav.side a:hover .dot{background:var(--fg);transform:scale(2.2);box-shadow:0 0 8px rgba(232,232,228,.5)}
+nav.side a.on{color:var(--fg)}
+nav.side a.on .dot{background:var(--fg);transform:scale(1.6)}
+
+main{padding:0 0 0 140px}
+section{padding:130px 80px 130px 0}
+#home{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-top:100px;padding-bottom:80px;position:relative;overflow:hidden}
+
+.h-sub{font-size:10px;letter-spacing:.2em;color:var(--dim);margin-bottom:32px;text-transform:uppercase;opacity:0;animation:fu 1s ease 2.1s forwards}
+.h-title{font-size:clamp(52px,7.5vw,96px);font-weight:700;line-height:.95;letter-spacing:-.03em;will-change:transform}
+.h-title .ln{display:block;overflow:hidden}
+.h-title .ln span{display:block;opacity:0;transform:translateY(108%);animation:su .95s var(--ease) forwards}
+.h-title .ln:nth-child(1) span{animation-delay:2s}
+.h-title .ln:nth-child(2) span{animation-delay:2.12s}
+.h-title .ln:nth-child(3) span{animation-delay:2.24s}
+.h-desc{margin-top:48px;max-width:440px;font-size:13px;line-height:2.1;color:rgba(232,232,228,.55);opacity:0;animation:fu 1.1s ease 2.4s forwards}
+.h-desc em{font-style:italic;color:var(--fg)}
+.scroll-hint{position:absolute;bottom:48px;left:0;font-size:9px;letter-spacing:.25em;color:var(--dim);opacity:0;animation:fu 1s ease 2.8s forwards;display:flex;align-items:center;gap:14px;text-transform:uppercase}
+.scroll-hint::before{content:'';display:block;width:36px;height:1px;background:var(--dim);animation:la 2.5s ease 3.2s infinite}
+
+.stats{display:flex;gap:52px;margin-top:56px;opacity:0;animation:fu 1s ease 2.5s forwards}
+.stat-num{font-size:clamp(32px,4vw,52px);font-weight:700;letter-spacing:-.03em;line-height:1}
+.stat-label{font-size:10px;letter-spacing:.15em;color:var(--dim);margin-top:6px;text-transform:uppercase}
+
+.sep{border-top:1px solid var(--border)}
+.sh{display:flex;align-items:baseline;gap:20px;margin-bottom:80px}
+.st{font-size:10px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+.sl{flex:1;height:1px;background:var(--border);max-width:180px;transform:scaleX(0);transform-origin:left;transition:transform .8s var(--ease)}
+.vis .sl{transform:scaleX(1)}
+
+.pl{list-style:none}
+.pi{border-top:1px solid var(--border);position:relative;overflow:hidden}
+.pi:last-child{border-bottom:1px solid var(--border)}
+.pi::after{content:'';position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--fg);transform:scaleX(0);transform-origin:left;transition:transform .55s var(--ease)}
+.pi:hover::after{transform:scaleX(1)}
+.plink{display:flex;justify-content:space-between;align-items:center;padding:24px 0;text-decoration:none;color:var(--fg);position:relative;z-index:1;gap:28px}
+.plink::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(232,232,228,.05),transparent);transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease);z-index:-1}
+.pi:hover .plink::before{transform:scaleX(1)}
+.pname{font-size:clamp(14px,1.9vw,19px);font-weight:700;letter-spacing:-.01em;flex:1;transition:letter-spacing .45s ease}
+.pi:hover .pname{letter-spacing:.02em}
+.pmeta{font-size:10px;color:var(--dim);letter-spacing:.08em;text-align:right;white-space:nowrap}
+.parr{font-size:15px;color:var(--dim);flex-shrink:0;display:inline-block;transition:transform .45s var(--back),color .3s}
+.pi:hover .parr{transform:translate(6px,-6px);color:var(--fg)}
+
+.skills-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 60px}
+.skill-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.skill-top{display:flex;justify-content:space-between;margin-bottom:10px;font-size:11px;letter-spacing:.08em}
+.skill-pct{color:var(--dim)}
+.skill-track{height:1px;background:var(--border);position:relative;overflow:hidden}
+.skill-fill{height:100%;background:var(--fg);width:0;transition:width 1.3s var(--ease)}
+.skill-fill.go{width:var(--w)}
+
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:80px}
+.ib h3{font-size:10px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-bottom:32px}
+.ib p{font-size:13px;line-height:2.3;color:rgba(232,232,228,.65)}
+.al{list-style:none}
+.al li{font-size:11px;line-height:1.7;color:rgba(232,232,228,.55);padding:12px 0;border-bottom:1px solid var(--border);transition:color .3s}
+.al li:hover{color:rgba(232,232,228,.85)}
+.al li strong{display:block;color:var(--fg);font-size:12px}
+
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:1px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:44px}
+.tl-item:last-child{margin-bottom:0}
+.tl-dot{position:absolute;left:-32px;top:6px;width:8px;height:8px;border-radius:50%;border:1px solid var(--dim);background:var(--bg);transition:border-color .3s,background .3s,box-shadow .3s}
+.tl-item:hover .tl-dot{border-color:var(--fg);background:var(--fg);box-shadow:0 0 10px rgba(232,232,228,.3)}
+.tl-date{font-size:10px;letter-spacing:.15em;color:var(--dim);margin-bottom:8px}
+.tl-role{font-size:14px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px}
+.tl-co{font-size:11px;color:var(--dim);letter-spacing:.06em;margin-bottom:10px}
+.tl-desc{font-size:12px;line-height:1.9;color:rgba(232,232,228,.55)}
+
+.testi-wrap{position:relative;overflow:hidden}
+.testi-track{display:flex;transition:transform .6s var(--ease)}
+.testi-slide{min-width:100%;padding-right:40px}
+.testi-quote{font-size:clamp(14px,1.8vw,18px);line-height:1.9;font-style:italic;color:rgba(232,232,228,.8);margin-bottom:28px}
+.testi-author{font-size:11px;letter-spacing:.1em;color:var(--dim)}
+.testi-author strong{color:var(--fg);display:block;font-size:12px;margin-bottom:3px}
+.testi-nav{display:flex;gap:12px;margin-top:32px;align-items:center}
+.testi-btn{width:28px;height:28px;border:1px solid var(--border);background:none;cursor:none;font-family:var(--font);color:var(--dim);font-size:14px;display:flex;align-items:center;justify-content:center;transition:border-color .3s,color .3s}
+.testi-btn:hover{border-color:var(--fg);color:var(--fg)}
+.testi-dots{display:flex;align-items:center;gap:8px;margin-left:auto}
+.testi-dot-i{width:4px;height:4px;border-radius:50%;background:var(--border);transition:background .3s,transform .3s}
+.testi-dot-i.on{background:var(--fg);transform:scale(1.5)}
+
+.flist{list-style:none}
+.fi{border-top:1px solid var(--border)}
+.fi:last-child{border-bottom:1px solid var(--border)}
+.fq{display:flex;justify-content:space-between;align-items:center;padding:24px 0;cursor:none;font-size:13px;font-weight:700;letter-spacing:.02em;transition:color .3s;user-select:none}
+.fq:hover{color:#fff}
+.ftog{font-size:20px;color:var(--dim);line-height:1;transition:transform .45s var(--back),color .3s}
+.fi.open .ftog{transform:rotate(45deg);color:var(--fg)}
+.fans{font-size:12px;line-height:2.1;color:rgba(232,232,228,.55);max-height:0;overflow:hidden;transition:max-height .6s var(--ease),padding .4s;padding-bottom:0}
+.fi.open .fans{max-height:400px;padding-bottom:28px}
+
+.soc{display:flex;gap:32px;flex-wrap:wrap}
+.slink{text-decoration:none;color:var(--dim);font-size:11px;letter-spacing:.1em;position:relative;transition:color .3s;padding-bottom:3px}
+.slink::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--fg);transition:width .45s var(--ease)}
+.slink:hover{color:var(--fg)}
+.slink:hover::after{width:100%}
+
+footer{padding:48px 80px 48px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--dim);letter-spacing:.1em}
+
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.reveal.vis{opacity:1;transform:translateY(0)}
+
+@keyframes su{from{opacity:0;transform:translateY(108%)}to{opacity:1;transform:translateY(0)}}
+@keyframes fu{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes la{0%,100%{width:36px;opacity:.5}50%{width:72px;opacity:1}}
+
+@media(max-width:900px){
+  nav.side{display:none}
+  .hamburger{display:flex}
+  main{padding:0}
+  section{padding:100px 24px 80px}
+  .ig,.skills-grid{grid-template-columns:1fr;gap:40px}
+  footer{padding:32px 24px;flex-direction:column;gap:16px}
+  header{padding:20px 24px}
+  .stats{gap:32px}
+}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<div id="theme-flash"></div>
+<canvas id="fog"></canvas>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const PROJECTS = [
+  { name:"Portfolio Website v2",  url:"https://francisnieltamayo.vercel.app", date:"2024", role:"Design & Dev" },
+  { name:"E-Commerce UI",         url:"https://francisnieltamayo.vercel.app", date:"2024", role:"Design & Dev" },
+  { name:"Dashboard Application", url:"https://francisnieltamayo.vercel.app", date:"2024", role:"Frontend Dev" },
+  { name:"Landing Page — SaaS",   url:"https://francisnieltamayo.vercel.app", date:"2023", role:"Design & Dev" },
+  { name:"Blog Platform",         url:"https://francisnieltamayo.vercel.app", date:"2023", role:"Full Stack Dev" },
+  { name:"Mobile App UI",         url:"https://francisnieltamayo.vercel.app", date:"2023", role:"UI Design" },
+  { name:"Creative Agency Site",  url:"https://francisnieltamayo.vercel.app", date:"2022", role:"Design & Dev" },
+  { name:"Component Library",     url:"https://francisnieltamayo.vercel.app", date:"2022", role:"Frontend Dev" },
+];
+
+const SKILLS = [
+  {name:"React / Next.js",pct:92},{name:"TypeScript",pct:85},
+  {name:"Tailwind CSS",pct:90},   {name:"Node.js",pct:78},
+  {name:"Figma / UI",pct:88},     {name:"GSAP / Motion",pct:80},
+  {name:"REST APIs",pct:82},      {name:"PostgreSQL",pct:70},
+];
+
+const TIMELINE = [
+  {date:"2024 — Present",role:"Frontend Developer",company:"Freelance / Remote",desc:"Building bespoke web experiences for clients across PH and internationally. Specializing in React, animations, and design systems."},
+  {date:"2023 — 2024",role:"UI/UX Developer",company:"Startup, Cebu PH",desc:"Led frontend development for a SaaS dashboard product. Implemented design system and reduced load time by 40%."},
+  {date:"2022 — 2023",role:"Web Designer",company:"Agency, PH",desc:"Designed and developed landing pages and e-commerce storefronts. Worked closely with clients from brief to launch."},
+];
+
+const TESTIMONIALS = [
+  {quote:"Francis delivered beyond our expectations. The animations and attention to detail set our site apart from every competitor.",author:"Maria Santos",role:"Founder, TechCo PH"},
+  {quote:"Working with Francis was seamless. He understood the brief immediately and produced something truly stunning.",author:"James Reyes",role:"Creative Director"},
+  {quote:"The best frontend developer I've worked with. Fast, precise, and genuinely passionate about the craft.",author:"Anna Cruz",role:"Product Manager"},
+];
+
+const FAQS = [
+  {q:"How did you get into web development?",a:"I started with curiosity — fascinated by how websites could be both functional and beautiful. Learned through building and experimenting."},
+  {q:"What's your design philosophy?",a:"Great design is invisible. Every interaction should feel natural and intentional — never forced."},
+  {q:"Available for freelance work?",a:"Yes! I'm open to interesting projects. Feel free to reach out via the contact section."},
+  {q:"What tools do you use?",a:"GSAP for animations · Next.js for React · Framer Motion for UI transitions · Tailwind CSS for styling."},
+];
+
+const THEMES = {
+  dark: {"--bg":"#080808","--fg":"#e8e8e4","--dim":"#4a4a4a","--border":"#1e1e1e"},
+  light:{"--bg":"#f0f0ec","--fg":"#080808","--dim":"#aaaaaa","--border":"#dddddd"},
+  mono: {"--bg":"#0c0c0c","--fg":"#39ff9a","--dim":"#1a5c40","--border":"#0f2d20"},
+};
+
+const NAV_LINKS = ["home","projects","skills","timeline","testimonials","contact","faq"];
+
+// Fog
+function useFog() {
+  useEffect(() => {
+    const canvas = document.getElementById("fog");
+    const ctx = canvas.getContext("2d");
+    let W,H,raf,frame=0,t=0;
+    let mx=.5,my=.5,tmx=.5,tmy=.5,sy=0,syt=0;
+    const resize=()=>{W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;};
+    resize(); window.addEventListener("resize",resize);
+    const onM=e=>{tmx=e.clientX/W;tmy=e.clientY/H;};
+    const onS=()=>{sy=window.scrollY;};
+    window.addEventListener("mousemove",onM); window.addEventListener("scroll",onS);
+    const B=Array.from({length:6},(_,i)=>({phase:(i/6)*Math.PI*2,spd:.055+i*.007,cx:.15+(i/5)*.7,cy:.1+(i/5)*.8,orx:.22+(i%3)*.06,ory:.18+(i%2)*.1,size:.30+(i%3)*.09,alpha:.048+(i%3)*.011}));
+    const draw=()=>{
+      raf=requestAnimationFrame(draw); if(++frame%2!==0)return;
+      mx+=(tmx-mx)*.035; my+=(tmy-my)*.035; syt+=(sy-syt)*.06;
+      ctx.clearRect(0,0,W,H);
+      for(const b of B){
+        const bx=(b.cx+Math.sin(t*b.spd+b.phase)*b.orx)*W;
+        const by=(b.cy+Math.cos(t*b.spd*.8+b.phase)*b.ory)*H-syt*.05;
+        const br=W*b.size*(1+.06*Math.sin(t*.25+b.phase));
+        const g=ctx.createRadialGradient(bx,by,0,bx,by,br);
+        g.addColorStop(0,`rgba(210,210,200,${b.alpha})`);
+        g.addColorStop(.5,`rgba(200,200,190,${b.alpha*.3})`);
+        g.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      }
+      const gx=mx*W,gy=my*H;
+      const g1=ctx.createRadialGradient(gx,gy,0,gx,gy,W*.26);
+      g1.addColorStop(0,"rgba(230,230,220,0.09)"); g1.addColorStop(.5,"rgba(210,210,200,0.03)"); g1.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+      const g2=ctx.createRadialGradient(gx,gy,0,gx,gy,W*.06);
+      g2.addColorStop(0,"rgba(240,240,230,0.11)"); g2.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+      const v=ctx.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,H*.85);
+      v.addColorStop(0,"rgba(0,0,0,0)"); v.addColorStop(1,"rgba(0,0,0,0.72)");
+      ctx.fillStyle=v; ctx.fillRect(0,0,W,H);
+      t+=.014;
+    };
+    draw();
+    return()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",resize);window.removeEventListener("mousemove",onM);window.removeEventListener("scroll",onS);};
+  },[]);
+}
+
+// Scroll progress
+function useScrollProgress() {
+  useEffect(()=>{
+    const bar=document.getElementById("prog");
+    const fn=()=>{const h=document.documentElement.scrollHeight-window.innerHeight;bar.style.width=(h>0?(window.scrollY/h)*100:0)+"%";};
+    window.addEventListener("scroll",fn);
+    return()=>window.removeEventListener("scroll",fn);
+  },[]);
+}
+
+// Reveal hook
+function useReveal(ref,delay=0){
+  useEffect(()=>{
+    if(!ref.current)return;
+    ref.current.style.transitionDelay=delay+"s";
+    const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting){ref.current.classList.add("vis");obs.disconnect();}},{threshold:.08});
+    obs.observe(ref.current);
+    return()=>obs.disconnect();
+  },[]);
+}
+function Rev({tag:Tag="div",className="",delay=0,children,...p}){
+  const r=useRef(null); useReveal(r,delay);
+  return <Tag ref={r} className={`reveal ${className}`} {...p}>{children}</Tag>;
+}
+
+// Cursor + ripple
+function Cursor(){
+  const cr=useRef(null),rr=useRef(null);
+  useEffect(()=>{
+    let cx=0,cy=0,rx=0,ry=0,raf;
+    const onM=e=>{cx=e.clientX;cy=e.clientY;cr.current.style.left=cx+"px";cr.current.style.top=cy+"px";};
+    window.addEventListener("mousemove",onM);
+    const loop=()=>{raf=requestAnimationFrame(loop);rx+=(cx-rx)*.11;ry+=(cy-ry)*.11;rr.current.style.left=rx+"px";rr.current.style.top=ry+"px";};
+    loop();
+    const ov=()=>{cr.current.classList.add("h");rr.current.classList.add("h");};
+    const ou=()=>{cr.current.classList.remove("h");rr.current.classList.remove("h");};
+    const refresh=()=>document.querySelectorAll("a,button,.fq,.testi-btn").forEach(el=>{el.addEventListener("mouseenter",ov);el.addEventListener("mouseleave",ou);});
+    refresh();
+    const mo=new MutationObserver(refresh); mo.observe(document.body,{childList:true,subtree:true});
+    const onClick=e=>{
+      cr.current.classList.add("click"); setTimeout(()=>cr.current.classList.remove("click"),200);
+      const d=document.createElement("div"); d.className="ripple-el";
+      d.style.cssText=`width:80px;height:80px;left:${e.clientX}px;top:${e.clientY}px`;
+      document.body.appendChild(d); setTimeout(()=>d.remove(),650);
+    };
+    window.addEventListener("click",onClick);
+    return()=>{cancelAnimationFrame(raf);window.removeEventListener("mousemove",onM);window.removeEventListener("click",onClick);mo.disconnect();};
+  },[]);
+  return <><div ref={cr} className="cur"/><div ref={rr} className="cur-ring"/></>;
+}
+
+// Splash
+function Splash({onDone}){
+  const [hide,setHide]=useState(false);
+  useEffect(()=>{const t=setTimeout(()=>{setHide(true);setTimeout(onDone,850);},2000);return()=>clearTimeout(t);},[]);
+  return(
+    <div id="splash" className={hide?"hide":""}>
+      <div style={{textAlign:"center"}}>
+        <div className="splash-name"><span>Francis Niel Tamayo</span></div>
+        <div className="splash-bar"/>
+        <div style={{fontSize:"10px",letterSpacing:".2em",color:"var(--dim)",marginTop:"16px",opacity:0,animation:"fu .8s ease 1.3s forwards"}}>DESIGNER &amp; DEVELOPER</div>
+      </div>
+    </div>
+  );
+}
+
+// Counter
+function Counter({target,suffix=""}){
+  const [v,setV]=useState(0); const r=useRef(null);
+  useEffect(()=>{
+    const obs=new IntersectionObserver(([e])=>{
+      if(!e.isIntersecting)return; obs.disconnect();
+      let s=0; const step=()=>{s+=Math.ceil((target-s)/8);setV(s>=target?target:s);if(s<target)requestAnimationFrame(step);};
+      requestAnimationFrame(step);
+    },{threshold:.5});
+    obs.observe(r.current); return()=>obs.disconnect();
+  },[target]);
+  return <span ref={r}>{v}{suffix}</span>;
+}
+
+// Magnetic project item
+function MagItem({p,delay}){
+  const ref=useRef(null),lref=useRef(null),rref=useRef(null);
+  useReveal(rref,delay);
+  useEffect(()=>{
+    const el=ref.current,link=lref.current; if(!el||!link)return;
+    const onM=e=>{const r=el.getBoundingClientRect();link.style.transform=`translate(${(e.clientX-(r.left+r.width/2))*.1}px,${(e.clientY-(r.top+r.height/2))*.15}px)`;};
+    const onL=()=>{link.style.transform="";};
+    el.addEventListener("mousemove",onM); el.addEventListener("mouseleave",onL);
+    return()=>{el.removeEventListener("mousemove",onM);el.removeEventListener("mouseleave",onL);};
+  },[]);
+  return(
+    <div ref={rref} className="reveal">
+      <li ref={ref} className="pi">
+        <a ref={lref} href={p.url} target="_blank" rel="noreferrer" className="plink" style={{transition:"transform .35s cubic-bezier(.34,1.56,.64,1)"}}>
+          <span className="pname">{p.name}</span>
+          <span className="pmeta">{p.date} / {p.role}</span>
+          <span className="parr">↗</span>
+        </a>
+      </li>
+    </div>
+  );
+}
+
+// Skill bar
+function SkillBar({name,pct,delay}){
+  const fr=useRef(null);
+  useEffect(()=>{
+    const obs=new IntersectionObserver(([e])=>{
+      if(!e.isIntersecting)return; obs.disconnect();
+      if(fr.current){fr.current.style.transitionDelay=delay+"s";fr.current.classList.add("go");}
+    },{threshold:.3});
+    if(fr.current)obs.observe(fr.current); return()=>obs.disconnect();
+  },[]);
+  return(
+    <div className="skill-row">
+      <div className="skill-top"><span>{name}</span><span className="skill-pct">{pct}%</span></div>
+      <div className="skill-track"><div ref={fr} className="skill-fill" style={{"--w":pct+"%"}}/></div>
+    </div>
+  );
+}
+
+// Testimonials
+function Testimonials(){
+  const [idx,setIdx]=useState(0);
+  return(
+    <Rev>
+      <div className="testi-wrap">
+        <div className="testi-track" style={{transform:`translateX(-${idx*100}%)`}}>
+          {TESTIMONIALS.map((t,i)=>(
+            <div key={i} className="testi-slide">
+              <div className="testi-quote">"{t.quote}"</div>
+              <div className="testi-author"><strong>{t.author}</strong>{t.role}</div>
+            </div>
+          ))}
+        </div>
+        <div className="testi-nav">
+          <button className="testi-btn" onClick={()=>setIdx(i=>(i-1+TESTIMONIALS.length)%TESTIMONIALS.length)}>←</button>
+          <button className="testi-btn" onClick={()=>setIdx(i=>(i+1)%TESTIMONIALS.length)}>→</button>
+          <div className="testi-dots">{TESTIMONIALS.map((_,i)=><div key={i} className={`testi-dot-i${i===idx?" on":""}`}/>)}</div>
+        </div>
+      </div>
+    </Rev>
+  );
+}
+
+// Smooth scroll helper
+const goTo=(id,e)=>{e&&e.preventDefault();document.getElementById(id)?.scrollIntoView({behavior:"smooth"});};
+
+// App
+function App(){
+  const [ready,setReady]=useState(false);
+  const [theme,setTheme]=useState("dark");
+  const [active,setActive]=useState("home");
+  const [mob,setMob]=useState(false);
+  const [faq,setFaq]=useState(null);
+  const heroRef=useRef(null);
+
+  useFog(); useScrollProgress();
+
+  // Parallax hero
+  useEffect(()=>{
+    const el=heroRef.current; if(!el)return;
+    const fn=()=>{el.style.transform=`translateY(${window.scrollY*.28}px)`;};
+    window.addEventListener("scroll",fn,{passive:true});
+    return()=>window.removeEventListener("scroll",fn);
+  },[ready]);
+
+  // Apply theme with flash
+  const applyTheme=useCallback(n=>{
+    const f=document.getElementById("theme-flash");
+    f.classList.add("flash");
+    setTimeout(()=>{Object.entries(THEMES[n]).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));setTheme(n);setTimeout(()=>f.classList.remove("flash"),150);},150);
+  },[]);
+
+  useEffect(()=>{Object.entries(THEMES.dark).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));},[]);
+
+  // Active nav
+  useEffect(()=>{
+    if(!ready)return;
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)setActive(e.target.id);});},{threshold:.4});
+    document.querySelectorAll("section[id]").forEach(s=>obs.observe(s));
+    return()=>obs.disconnect();
+  },[ready]);
+
+  if(!ready)return <Splash onDone={()=>setReady(true)}/>;
+
+  return(
+    <div className="wrap">
+      <Cursor/>
+      <header>
+        <a href="#home" className="logo" onClick={e=>goTo("home",e)}>Francis Niel Tamayo</a>
+        <div style={{display:"flex",alignItems:"center",gap:"20px"}}>
+          <div className="themes">
+            {["dark","light","mono"].map(t=>(
+              <button key={t} className={theme===t?"on":""} onClick={()=>applyTheme(t)}>
+                {t.charAt(0).toUpperCase()+t.slice(1)}
+              </button>
+            ))}
+          </div>
+          <button className={`hamburger${mob?" open":""}`} onClick={()=>setMob(o=>!o)} aria-label="Menu">
+            <span/><span/><span/>
+          </button>
+        </div>
+      </header>
+
+      <nav className="side">
+        {NAV_LINKS.map(id=>(
+          <a key={id} href={`#${id}`} className={active===id?"on":""} onClick={e=>goTo(id,e)}>
+            <span className="dot"/>{id.charAt(0).toUpperCase()+id.slice(1)}
+          </a>
+        ))}
+      </nav>
+
+      <div className={`mob-menu${mob?" open":""}`}>
+        {NAV_LINKS.map(id=>(
+          <a key={id} href={`#${id}`} onClick={e=>{goTo(id,e);setMob(false);}}>
+            {id.charAt(0).toUpperCase()+id.slice(1)}
+          </a>
+        ))}
+      </div>
+
+      <main>
+        {/* HOME */}
+        <section id="home">
+          <div ref={heroRef}>
+            <p className="h-sub">Designer &amp; Developer</p>
+            <h1 className="h-title">
+              <span className="ln"><span>Francis</span></span>
+              <span className="ln"><span>Niel</span></span>
+              <span className="ln"><span>Tamayo</span></span>
+            </h1>
+            <p className="h-desc">Based in the <em>Philippines.</em><br/>I craft <em>expressive web experiences</em><br/>at the intersection of design and code.</p>
+            <div className="stats">
+              <div><div className="stat-num"><Counter target={8}/>+</div><div className="stat-label">Projects</div></div>
+              <div><div className="stat-num"><Counter target={3}/>+</div><div className="stat-label">Years Exp</div></div>
+              <div><div className="stat-num"><Counter target={100}/>%</div><div className="stat-label">Passion</div></div>
+            </div>
+          </div>
+          <div className="scroll-hint">Scroll</div>
+        </section>
+
+        {/* PROJECTS */}
+        <section id="projects" className="sep">
+          <Rev className="sh"><span className="st">Projects</span><div className="sl"/></Rev>
+          <ul className="pl">{PROJECTS.map((p,i)=><MagItem key={i} p={p} delay={i*.04}/>)}</ul>
+        </section>
+
+        {/* SKILLS */}
+        <section id="skills" className="sep">
+          <Rev className="sh"><span className="st">Skills</span><div className="sl"/></Rev>
+          <div className="skills-grid">{SKILLS.map((s,i)=><SkillBar key={i} name={s.name} pct={s.pct} delay={i*.07}/>)}</div>
+        </section>
+
+        {/* TIMELINE */}
+        <section id="timeline" className="sep">
+          <Rev className="sh"><span className="st">Experience</span><div className="sl"/></Rev>
+          <div className="timeline">
+            {TIMELINE.map((tl,i)=>(
+              <Rev key={i} className="tl-item" delay={i*.12}>
+                <div className="tl-dot"/>
+                <div className="tl-date">{tl.date}</div>
+                <div className="tl-role">{tl.role}</div>
+                <div className="tl-co">{tl.company}</div>
+                <div className="tl-desc">{tl.desc}</div>
+              </Rev>
+            ))}
+          </div>
+        </section>
+
+        {/* TESTIMONIALS */}
+        <section id="testimonials" className="sep">
+          <Rev className="sh"><span className="st">Testimonials</span><div className="sl"/></Rev>
+          <Testimonials/>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="sep">
+          <Rev className="sh"><span className="st">FAQ</span><div className="sl"/></Rev>
+          <ul className="flist">
+            {FAQS.map((f,i)=>(
+              <li key={i} className={`fi${faq===i?" open":""}`}>
+                <div className="fq" onClick={()=>setFaq(faq===i?null:i)}>{f.q}<span className="ftog">+</span></div>
+                <div className="fans">{f.a}</div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* CONTACT */}
+        <section id="contact" className="sep">
+          <Rev className="sh"><span className="st">Contact</span><div className="sl"/></Rev>
+          <Rev className="soc" delay={.1}>
+            {[
+              {label:"Portfolio ↗",href:"https://francisnieltamayo.vercel.app"},
+              {label:"GitHub ↗",href:"https://github.com/francisnieltamayo"},
+              {label:"LinkedIn ↗",href:"https://linkedin.com/in/francisnieltamayo"},
+              {label:"Email ↗",href:"mailto:hello@francisnieltamayo.com"},
+            ].map((l,i)=><a key={i} href={l.href} target="_blank" rel="noreferrer" className="slink">{l.label}</a>)}
+          </Rev>
+        </section>
+
+        <footer>
+          <span>© Francis Niel Tamayo</span>
+          <span style={{fontSize:"9px",letterSpacing:".18em"}}>DESIGNER &amp; DEVELOPER — PH</span>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
